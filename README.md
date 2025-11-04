@@ -1,5 +1,5 @@
 # Extract_internal_tides_with_UNet_and_surface_field_synergy
-Prodcution codes for our paper "Disentangling Internal Tides from Balanced Motions with Deep Learning and Surface Field Synergy" by Han Wang, Jeffrey Uncu, Kaushik Srinivasan and Nicolas Grisouard. 
+Prodution codes for our paper "Disentangling Internal Tides from Balanced Motions with Deep Learning and Surface Field Synergy" by Han Wang, Jeffrey Uncu, Kaushik Srinivasan and Nicolas Grisouard. 
 
 Folder “U_Net_training_and_definitions” contains the main codes defining and training the U-Nets used in the paper. 
 - The file unet.py contains the definition for our main U-Net. (The one without batchnorm is what we call in the main codes.) It calls functions in unet_parts.py and utils.py. 
