@@ -23,7 +23,7 @@ class Up_for_shallowUNets(nn.Module):
         x = torch.cat([x2, x1], dim=1)
         return self.conv(x)
 
-#Receptive field
+#Receptive field computation:
 #Orignial U-Net with 4 layers: 200*200 patch in the input affects one pixel in the output. 
 #Receptive field: 44-by-44 patch in the input affects one pixel in the output. 
 class TwolayerUNet(nn.Module):
@@ -53,6 +53,40 @@ class TwolayerUNet(nn.Module):
         x = checkpoint(self.up4, x, x1, use_reentrant=False)
         logits = checkpoint(self.outc, x, use_reentrant=False)
         return logits
+
+
+#HW: Two-layer UNet that permits dilated convolutions. In principle, as dilation is optional in these functions, they could just replace TwolayerUNet above. I'm keeping copies just for sake of housekeeping. 
+
+class TwolayerUNet_dil(nn.Module):
+    def __init__(self, n_channels, n_classes, bilinear=False, Nbase=16,
+                 use_dilated_bottleneck=False, bottleneck_dilation=(2, 3)):
+        super().__init__()
+        self.n_channels = n_channels
+        self.n_classes = n_classes
+        self.bilinear = bilinear
+
+        self.inc = DoubleConv(n_channels, Nbase)
+        self.down1 = Down(Nbase, Nbase * 2)
+
+        if use_dilated_bottleneck:
+            self.down2 = Down_dil(Nbase * 2, Nbase * 4, dilation=bottleneck_dilation)
+        else:
+            self.down2 = Down(Nbase * 2, Nbase * 4)
+
+        self.up3 = Up_for_shallowUNets(Nbase * 4 + Nbase * 2, Nbase * 2, bilinear)
+        self.up4 = Up_for_shallowUNets(Nbase * 2 + Nbase, Nbase, bilinear)
+        self.outc = OutConv(Nbase, n_classes)
+
+    def forward(self, x):
+        x1 = checkpoint(self.inc, x, use_reentrant=False)
+        x2 = checkpoint(self.down1, x1, use_reentrant=False)
+        x3 = checkpoint(self.down2, x2, use_reentrant=False)
+        x = checkpoint(self.up3, x3, x2, use_reentrant=False)
+        x = checkpoint(self.up4, x, x1, use_reentrant=False)
+        logits = checkpoint(self.outc, x, use_reentrant=False)
+        return logits
+
+
 
 #Recptive field: 18*18
 #Turns out that the memory blows up too fast.
